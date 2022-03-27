@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from math import sqrt
 from sys import exit as e
 
-class Attention(nn.Module):
+class MultiHeadAttention(nn.Module):
   def __init__(self, dim, n_heads):
     super().__init__()
 
@@ -30,3 +30,25 @@ class Attention(nn.Module):
     Z = torch.einsum('btn, bnk -> btk', W, V).view(b, h, t, k).contiguous().view(b, t, h*k)
     Z = self.finalDense(Z)
     return Z
+
+class Transformer(nn.Module):
+  def __init__(self, dim, n_heads):
+    super().__init__()
+    self.attention = MultiHeadAttention(dim, n_heads)
+    self.norm1 = nn.LayerNorm(dim)
+
+    self.ff = nn.Sequential(
+      nn.Linear(dim, n_heads * dim),
+      nn.ReLU(),
+      nn.Linear(n_heads * dim, dim) 
+    )
+    self.norm2 = nn.LayerNorm(dim)
+
+    
+  def forward(self, x):
+    attn = self.attention(x)
+    out = self.norm1(attn + x)
+
+    ff_out = self.ff(out)
+    out = self.norm2(ff_out + x)
+    return out

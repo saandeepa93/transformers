@@ -38,8 +38,8 @@ class OpenData(Dataset):
     return len(self.all_files)
 
   def __getitem__(self, idx):
-    fname = self.all_files[idx].split('\\')[-1].split('.')[0]
-    sub = self.all_files[idx].split('\\')[0].split('/')[-1]
+    fname = self.all_files[idx].split('/')[-1].split('.')[0]
+    sub = self.all_files[idx].split('/')[-2]
     fl = f"{sub}_{fname}"
     
     df = pd.read_csv(self.all_files[idx])
@@ -49,6 +49,12 @@ class OpenData(Dataset):
     target = self.label_dict[int(sub)]
     sub = self.all_files[idx].split("/")[-2]
     
-    return x.to(torch.float32), target, fl
+    return x.to(torch.float32)[:100, :], target, fl
+
+# class ImageDataset(Dataset):
+#   def __init__(self):
+#     super().__init__()
+
+#     self
 
     
