@@ -41,8 +41,8 @@ if __name__ == "__main__":
   print("Total Parameters: ", sum(p.numel() for p in model.parameters()))
   print("Total Trainable Parameters: ", sum(p.numel() for p in model.parameters() if p.requires_grad))
   
-  
+
   for b, (x, target, fl) in enumerate(dataloader, 0):
     out = model(x)
-    print(out.size())
+    print(out, target)
     e()

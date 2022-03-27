@@ -31,6 +31,7 @@ class MultiHeadAttention(nn.Module):
     Z = self.finalDense(Z)
     return Z
 
+
 class Encoder(nn.Module):
   def __init__(self, dim, n_heads):
     super().__init__()
@@ -44,7 +45,6 @@ class Encoder(nn.Module):
     )
     self.norm2 = nn.LayerNorm(dim)
 
-    
   def forward(self, x):
     attn = self.attention(x)
     attn_out = self.norm1(attn + x)
@@ -61,9 +61,12 @@ class Transformer(nn.Module):
     self.encoders = nn.ModuleList()
     for _ in range(nx):
       self.encoders.append(Encoder(dim, n_heads))
+
+    self.toprobs = nn.Linear(dim, 2)
     
   def forward(self, x):
     out = x
     for encoder in self.encoders:
       out = encoder(out)
-    return out
+    out = self.toprobs(out.mean(dim=1))
+    return F.log_softmax(out)
