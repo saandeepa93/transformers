@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 
 from args import get_args
 from dataset import OpenData
-from model import MultiHeadAttention, Transformer
+from model import MultiHeadAttention, Encoder
 
 def seed_everything(seed):
   random.seed(seed)
@@ -26,7 +26,7 @@ if __name__ == "__main__":
   dataset = OpenData(args)
   dataloader = DataLoader(dataset, batch_size = args.batch, shuffle=True)
   # model = MultiHeadAttention(712, 4)
-  model = Transformer(712, 4)
+  model = Encoder(712, 4)
 
   for b, (x, target, fl) in enumerate(dataloader, 0):
     out = model(x)

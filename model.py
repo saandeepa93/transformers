@@ -31,7 +31,7 @@ class MultiHeadAttention(nn.Module):
     Z = self.finalDense(Z)
     return Z
 
-class Transformer(nn.Module):
+class Encoder(nn.Module):
   def __init__(self, dim, n_heads):
     super().__init__()
     self.attention = MultiHeadAttention(dim, n_heads)
