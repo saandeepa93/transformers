@@ -95,3 +95,64 @@ class OpenData(Dataset):
 
 
     
+class ImageDataset(Dataset):
+  def __init__(self, root):
+    super().__init__()
+    self.root = root
+    self.mode = mode
+    self.batch_size = batch_size
+
+    self.label_dict = {1: 0, 2: 0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:1, 10:0, 11:0, 13:0, 14:0, 15:1, 16:0, 17:1, 18:1, 19:1, 20:1}
+    self.train_id = [3, 4, 6, 7, 8, 9, 13, 15, 17, 2, 5, 11, 10, 18]
+    self.test_id = [1, 16, 19, 20]
+
+    self.all_files = []
+    self.getAllData()
+    self.transform = transforms.Compose([
+      transforms.ToTensor(),
+      transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+    ])
+    print(len(self.all_files))
+
+  def getAllData(self):
+    for sub in os.listdir(self.root):
+      sub_dir = os.path.join(self.root, sub)
+      if not os.path.isdir(sub_dir):
+        continue
+      if self.mode == "train":
+        if int(sub) in self.train_id:  
+          for context in os.listdir(sub_dir):
+            context_dir = os.path.join(sub_dir, context)
+            if not os.path.isdir(context_dir):
+              continue
+            for fl in os.listdir(context_dir):
+              fl_path = os.path.join(context_dir, fl)
+              if os.path.splitext(fl_path)[-1] != ".bmp":
+                continue 
+              self.all_files.append(fl_path)
+      elif self.mode == "test":
+        if int(sub) in self.test_id:
+          for context in os.listdir(sub_dir):
+            context_dir = os.path.join(sub_dir, context)
+            if not os.path.isdir(context_dir):
+              continue
+            for fl in os.listdir(context_dir):
+              fl_path = os.path.join(context_dir, fl)
+              if os.path.splitext(fl_path)[-1] != ".bmp":
+                continue 
+              self.all_files.append(fl_path)
+
+  def __len__(self):
+    return len(self.all_files)
+  
+  def __getitem__(self, idx):
+    fl = self.all_files[idx]
+    img = Image.Open(fl)
+    img = self.transform(img)
+
+    sub = fl.split('\\')[-2]
+    target = self.label_dict[int(sub)]
+    return x.to(torch.float32), target, fl
+
+

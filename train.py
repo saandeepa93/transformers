@@ -42,7 +42,7 @@ def get_valScores(testloader, model):
 
     accuracy_detail[sub]['pred'] = torch.argmax(out, dim=1)[0].item()
     accuracy_detail[sub]['true'] = target[0].item()
-    
+
   return accuracy_score(y_pred, y_true)
 
 
@@ -86,7 +86,8 @@ if __name__ == "__main__":
   criterion = nn.NLLLoss()
 
   pbar = tqdm(range(args.iter))
-  train_acc = 0.0
+  y_true_train = []
+  y_pred_train = []
   for epoch in pbar:
     for b, (x, target, fl) in enumerate(tqdm(trainloader), 0):
       model.train()
@@ -100,16 +101,22 @@ if __name__ == "__main__":
       loss.backward()
       optimizer.step()
 
-      if epoch+1 % 5 == 0:
-        pbar.set_description("Getting train accuracy")
-        train_acc = get_valScores(trainloader, model)
+      with torch.no_grad():
+        y_true_train.append(target[0].item())
+        y_pred_train.append(torch.argmax(out, dim=1)[0].item())
 
-      val_acc = get_valScores(testloader, model)
+      # if epoch+1 % 5 == 0:
+      #   pbar.set_description("Getting train accuracy")
+      # train_acc = get_valScores(trainloader, model)
 
-      writer.add_scalar("Loss/Train", loss.item(), b*(epoch+1))
-      writer.add_scalar("Acc/Val", val_acc, b * (epoch+1))
+    train_acc = accuracy_score(y_pred_train, y_true_train)
+    val_acc = get_valScores(testloader, model)
 
-      pbar.set_description(f"epoch: {epoch}; Train loss: {round(loss.item(), 3)}; Val Acc: {val_acc}; Train Acc: {train_acc}")
+    writer.add_scalar("Loss/Train", loss.item(), epoch)
+    writer.add_scalar("Acc/Val", val_acc, epoch)
+    writer.add_scalar("Acc/Val", train_acc, epoch)
+
+    pbar.set_description(f"epoch: {epoch}; Train loss: {round(loss.item(), 3)}; Val Acc: {val_acc}; Train_acc: {train_acc}")
   
   writer.flush()
   writer.close()
