@@ -55,18 +55,27 @@ class Encoder(nn.Module):
 
 
 class Transformer(nn.Module):
-  def __init__(self, dim, n_heads, nx):
+  def __init__(self, dim, n_heads, nx, n_class):
     super().__init__()
 
     self.encoders = nn.ModuleList()
     for _ in range(nx):
       self.encoders.append(Encoder(dim, n_heads))
 
-    self.toprobs = nn.Linear(dim, 2)
+    self.toprobs = nn.Sequential(
+      nn.Linear(dim, 512),
+      # nn.Dropout(0.3),
+      nn.ReLU(),
+      nn.Linear(512, 256),
+      # nn.Dropout(0.3),
+      nn.ReLU(),
+      nn.Linear(256, n_class),
+      nn.ReLU(),
+    )
     
   def forward(self, x):
     out = x
     for encoder in self.encoders:
       out = encoder(out)
     out = self.toprobs(out.mean(dim=1))
-    return F.log_softmax(out)
+    return F.log_softmax(out, dim=1)

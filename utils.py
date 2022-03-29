@@ -1,15 +1,19 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from tqdm import tqdm
 from scipy import interpolate
+from mpl_toolkits.mplot3d import Axes3D
+
+from sys import exit as e
 
 
-def res_signal(arr, idx):
-  # plt.plot(arr[:, idx], 'r-')
-  arr_resample = resample_by_col(arr, 1000, idx)
-  print(arr_resample.shape)
-  # plt.plot(arr_resample[:, idx], 'bo')
-  # plt.show()
-
+def plot_lm(arr, idx):
+  fig = plt.figure()
+  ax = Axes3D(fig)
+  lm_2d = arr[idx]
+  ax.scatter(lm_2d[:68], lm_2d[68:136], -lm_2d[136:])
+  ax.view_init(elev=90., azim=90.)
+  plt.savefig(f"./plots/orig/{idx}.png")
 
 def show_plot(x, x_new, y, y_new):
   # y = (y * 5 )
@@ -35,3 +39,7 @@ def resample_by_col(fd, s, idx=None):
   # if dir == "SN007":
   # show_plot(x, x_new, fd[:,idx], fd_new[:, idx])
   return fd_new
+
+def save_plots(arr):
+  for i in tqdm(range(arr.shape[0])):
+    plot_lm(arr, i)
