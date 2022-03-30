@@ -88,7 +88,7 @@ class OpenData(Dataset):
       x = self.resample_by_col(df.to_numpy(), self.args.scale)
 
     x = self.transform(x).squeeze()
-    # x = F.normalize(x, p=1, dim=1)
+    x = F.normalize(x, p=1, dim=1)
     target = self.label_dict[int(sub)]
     
     return x.to(torch.float32), target, fl
@@ -103,6 +103,7 @@ class ImageDataset(Dataset):
     self.batch_size = batch_size
 
     self.label_dict = {1: 0, 2: 0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:1, 10:0, 11:0, 13:0, 14:0, 15:1, 16:0, 17:1, 18:1, 19:1, 20:1}
+    self.context_dict = {"Baseline_Start": 0, "Clinician_Bothersome": 1, "Clinician_UCLA": 2}
     self.train_id = [3, 4, 6, 7, 8, 9, 13, 15, 17, 2, 5, 11, 10, 18]
     self.test_id = [1, 16, 19, 20]
 

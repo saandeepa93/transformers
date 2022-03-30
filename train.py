@@ -11,6 +11,9 @@ from torch.utils.tensorboard import SummaryWriter
 
 from sklearn.metrics import accuracy_score
 
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+
 
 from args import get_args
 from dataset import OpenData
@@ -43,7 +46,7 @@ def get_valScores(testloader, model):
     accuracy_detail[sub]['pred'] = torch.argmax(out, dim=1)[0].item()
     accuracy_detail[sub]['true'] = target[0].item()
 
-  return accuracy_score(y_pred, y_true)
+  return accuracy_score(y_pred, y_true), accuracy_detail
 
 
 if __name__ == "__main__":
@@ -51,7 +54,7 @@ if __name__ == "__main__":
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
   torch.autograd.set_detect_anomaly(True)
 
-  os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
+  os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID" 
   os.environ["CUDA_VISIBLE_DEVICES"]="0,1"
 
   print("GPU: ", torch.cuda.is_available())
@@ -60,11 +63,11 @@ if __name__ == "__main__":
   trainloader = DataLoader(train_dataset, batch_size = args.batch, shuffle=True)
   
   test_dataset = OpenData(args, "test")
-  testloader = DataLoader(test_dataset, batch_size = args.batch, shuffle=True)
+  testloader = DataLoader(test_dataset, batch_size = 1, shuffle=True)
 
   writer = SummaryWriter()
 
-  print(f"Training isntances: {len(trainloader)}")
+  print(f"Training instances: {len(trainloader)}")
   print(f"Test instances: {len(testloader)}")
 
   # model = MultiHeadAttention(712, 4)
@@ -85,9 +88,9 @@ if __name__ == "__main__":
   optimizer = optim.Adam(model.parameters(), lr=args.lr)
   criterion = nn.NLLLoss()
 
-  pbar = tqdm(range(args.iter))
   y_true_train = []
   y_pred_train = []
+  pbar = tqdm(range(args.iter))
   for epoch in pbar:
     for b, (x, target, fl) in enumerate(tqdm(trainloader), 0):
       model.train()
@@ -105,18 +108,22 @@ if __name__ == "__main__":
         y_true_train.append(target[0].item())
         y_pred_train.append(torch.argmax(out, dim=1)[0].item())
 
-      # if epoch+1 % 5 == 0:
-      #   pbar.set_description("Getting train accuracy")
-      # train_acc = get_valScores(trainloader, model)
+    if epoch%5 == 0:
+      torch.save(
+              model.state_dict(), f"./checkpoint/model_{epoch}.pt"
+        )
 
-    train_acc = accuracy_score(y_pred_train, y_true_train)
-    val_acc = get_valScores(testloader, model)
+    with torch.no_grad():
+      train_acc = accuracy_score(y_pred_train, y_true_train)
+      val_acc, _ = get_valScores(testloader, model)
 
     writer.add_scalar("Loss/Train", loss.item(), epoch)
     writer.add_scalar("Acc/Val", val_acc, epoch)
-    writer.add_scalar("Acc/Val", train_acc, epoch)
+    writer.add_scalar("Acc/Train", train_acc, epoch)
 
     pbar.set_description(f"epoch: {epoch}; Train loss: {round(loss.item(), 3)}; Val Acc: {val_acc}; Train_acc: {train_acc}")
   
+  _, val_predictions = get_valScores(testloader, model)
+  print(val_predictions)
   writer.flush()
   writer.close()

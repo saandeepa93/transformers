@@ -64,10 +64,10 @@ class Transformer(nn.Module):
 
     self.toprobs = nn.Sequential(
       nn.Linear(dim, 512),
-      # nn.Dropout(0.3),
+      nn.Dropout(0.2),
       nn.ReLU(),
       nn.Linear(512, 256),
-      # nn.Dropout(0.3),
+      nn.Dropout(0.2),
       nn.ReLU(),
       nn.Linear(256, n_class),
       nn.ReLU(),
